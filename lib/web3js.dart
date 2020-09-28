@@ -34,6 +34,8 @@ class _Web3JsState extends State<Web3Js> {
           _accountWidget(context),
           SizedBox(height: 20),
           _balanceWidget(context),
+          SizedBox(height: 20),
+          _sendTransaction(context),
         ],
       ),
     );
@@ -113,8 +115,7 @@ class _Web3JsState extends State<Web3Js> {
           children: <Widget>[
             Container(
               child: Chip(
-                padding:
-                EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
+                padding: EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
                 backgroundColor: Colors.blue[500],
                 label: Text(
                   'MetaMask',
@@ -172,14 +173,11 @@ class _Web3JsState extends State<Web3Js> {
     return InkWell(
       onTap: () {
         js.context.callMethod("alert", ['start:' + account]);
-        (js.context["web3"]["eth"] as js.JsObject).callMethod(
-            'getBalance', [account, 'latest', (err, value) {
+        (js.context["web3"]["eth"] as js.JsObject).callMethod('getBalance', [account, 'latest', (err, value) {
           if (err != null && err == true) {
-            js.context.callMethod(
-                "alert", ['getBalance error:' + err.toString()]);
+            js.context.callMethod("alert", ['getBalance error:' + err.toString()]);
           } else {
-            js.context.callMethod(
-                "alert", ['getBalance value::' + value.toString()]);
+            js.context.callMethod("alert", ['getBalance value::' + value.toString()]);
             final decimalWei = Decimal.tryParse(value?.toString());
             if (decimalWei == null) {} else {
               balance = (decimalWei / Decimal.fromInt(10).pow(18)).toString();
@@ -241,6 +239,32 @@ class _Web3JsState extends State<Web3Js> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sendTransaction(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        if (account != null && account.trim() != '') {
+          js.context.callMethod('alert', ['start']);
+          js.context.callMethod('helloWord', ['hello world123']);
+          js.context.callMethod('sendTransaction', ['0x5bbF0971382Faa31ca55e74D89875a1F1531311e', '0x9120892E98fc20DAF33691619D9b70c099625107', 0.1]);
+          js.context.callMethod('alert', ['end']);
+        }
+      },
+      child: Container(
+        child: Chip(
+          padding: EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
+          backgroundColor: Colors.blue[500],
+          label: Text(
+            'SendTransaction',
+            style: GoogleFonts.lato(
+              fontSize: 25,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
     );
