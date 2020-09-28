@@ -4,7 +4,6 @@ import 'dart:js' as js;
 
 import 'package:google_fonts/google_fonts.dart';
 
-
 class Web3Js extends StatefulWidget {
   @override
   _Web3JsState createState() => _Web3JsState();
@@ -22,20 +21,22 @@ class _Web3JsState extends State<Web3Js> {
     return Container(
       child: Column(
         children: <Widget>[
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           _ethWidget(context),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           _web3jsWidget(context),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           _networkWidget(context),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           _callMetaMaskWidget(context),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           _accountWidget(context),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           _balanceWidget(context),
-          SizedBox(height: 20),
-          _sendTransaction(context),
+          SizedBox(height: 10),
+          _sendTransactionWidget(context),
+          SizedBox(height: 10),
+          _contractBalanceOfWidget(context),
         ],
       ),
     );
@@ -106,8 +107,8 @@ class _Web3JsState extends State<Web3Js> {
   Widget _callMetaMaskWidget(BuildContext context) {
     return InkWell(
       onTap: () async {
-        (js.context["ethereum"] as js.JsObject).callMethod(
-            "send", <dynamic>["eth_requestAccounts"]);
+        (js.context["ethereum"] as js.JsObject)
+            .callMethod("send", <dynamic>["eth_requestAccounts"]);
       },
       child: Container(
         child: Row(
@@ -115,7 +116,8 @@ class _Web3JsState extends State<Web3Js> {
           children: <Widget>[
             Container(
               child: Chip(
-                padding: EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
+                padding:
+                    EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
                 backgroundColor: Colors.blue[500],
                 label: Text(
                   'MetaMask',
@@ -167,24 +169,29 @@ class _Web3JsState extends State<Web3Js> {
     );
   }
 
-
   Widget _balanceWidget(BuildContext context) {
     print('account:' + account);
     return InkWell(
       onTap: () {
         js.context.callMethod("alert", ['start:' + account]);
-        (js.context["web3"]["eth"] as js.JsObject).callMethod('getBalance', [account, 'latest', (err, value) {
-          if (err != null && err == true) {
-            js.context.callMethod("alert", ['getBalance error:' + err.toString()]);
-          } else {
-            js.context.callMethod("alert", ['getBalance value::' + value.toString()]);
-            final decimalWei = Decimal.tryParse(value?.toString());
-            if (decimalWei == null) {} else {
-              balance = (decimalWei / Decimal.fromInt(10).pow(18)).toString();
+        (js.context["web3"]["eth"] as js.JsObject).callMethod('getBalance', [
+          account,
+          'latest',
+          (err, value) {
+            if (err != null && err == true) {
+              js.context
+                  .callMethod("alert", ['getBalance error:' + err.toString()]);
+            } else {
+              js.context.callMethod(
+                  "alert", ['getBalance value::' + value.toString()]);
+              final decimalWei = Decimal.tryParse(value?.toString());
+              if (decimalWei == null) {
+              } else {
+                balance = (decimalWei / Decimal.fromInt(10).pow(18)).toString();
+              }
+              setState(() {});
             }
-            setState(() {});
           }
-        }
         ]);
         js.context.callMethod("alert", ['end:' + account]);
       },
@@ -210,7 +217,6 @@ class _Web3JsState extends State<Web3Js> {
       ),
     );
   }
-
 
   Widget _networkWidget(BuildContext context) {
     return InkWell(
@@ -244,13 +250,17 @@ class _Web3JsState extends State<Web3Js> {
     );
   }
 
-  Widget _sendTransaction(BuildContext context) {
+  Widget _sendTransactionWidget(BuildContext context) {
     return InkWell(
       onTap: () {
         if (account != null && account.trim() != '') {
           js.context.callMethod('alert', ['start']);
           js.context.callMethod('helloWord', ['hello world123']);
-          js.context.callMethod('sendTransaction', ['0x5bbF0971382Faa31ca55e74D89875a1F1531311e', '0x9120892E98fc20DAF33691619D9b70c099625107', 0.1]);
+          js.context.callMethod('sendTransaction', [
+            '0x5bbF0971382Faa31ca55e74D89875a1F1531311e',
+            '0x9120892E98fc20DAF33691619D9b70c099625107',
+            0.1
+          ]);
           js.context.callMethod('alert', ['end']);
         }
       },
@@ -270,6 +280,31 @@ class _Web3JsState extends State<Web3Js> {
     );
   }
 
+  Widget _contractBalanceOfWidget(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        if (account != null && account.trim() != '') {
+          js.context.callMethod('alert', ['start01']);
+          js.context.callMethod('helloWord', ['hello world456']);
+          js.context.callMethod('contractBalanceOf', [account]);
+          js.context.callMethod('alert', ['end']);
+        }
+      },
+      child: Container(
+        child: Chip(
+          padding: EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
+          backgroundColor: Colors.blue[500],
+          label: Text(
+            'ContractBalanceOf06',
+            style: GoogleFonts.lato(
+              fontSize: 25,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   String getNetwork(String id) {
     switch (id.trim()) {
@@ -287,5 +322,4 @@ class _Web3JsState extends State<Web3Js> {
         return 'unknown network';
     }
   }
-
 }
