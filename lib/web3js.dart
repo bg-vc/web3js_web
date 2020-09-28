@@ -15,6 +15,7 @@ class _Web3JsState extends State<Web3Js> {
   String network = '';
   String account = '';
   String balance = '';
+  String tokenBalance = '';
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +38,8 @@ class _Web3JsState extends State<Web3Js> {
           _sendTransactionWidget(context),
           SizedBox(height: 10),
           _contractBalanceOfWidget(context),
+          SizedBox(height: 10),
+          _contractTransferWidget(context),
         ],
       ),
     );
@@ -107,8 +110,7 @@ class _Web3JsState extends State<Web3Js> {
   Widget _callMetaMaskWidget(BuildContext context) {
     return InkWell(
       onTap: () async {
-        (js.context["ethereum"] as js.JsObject)
-            .callMethod("send", <dynamic>["eth_requestAccounts"]);
+        (js.context["ethereum"] as js.JsObject).callMethod("send", <dynamic>["eth_requestAccounts"]);
       },
       child: Container(
         child: Row(
@@ -116,8 +118,7 @@ class _Web3JsState extends State<Web3Js> {
           children: <Widget>[
             Container(
               child: Chip(
-                padding:
-                    EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
+                padding: EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
                 backgroundColor: Colors.blue[500],
                 label: Text(
                   'MetaMask',
@@ -142,8 +143,6 @@ class _Web3JsState extends State<Web3Js> {
           setState(() {
             account = arr[0].toString();
           });
-          js.context.callMethod("alert", ['account 0:' + arr[0]]);
-          js.context.callMethod("alert", ['account 1:' + arr[1]]);
         }
       },
       child: Container(
@@ -170,30 +169,27 @@ class _Web3JsState extends State<Web3Js> {
   }
 
   Widget _balanceWidget(BuildContext context) {
-    print('account:' + account);
     return InkWell(
       onTap: () {
-        js.context.callMethod("alert", ['start:' + account]);
-        (js.context["web3"]["eth"] as js.JsObject).callMethod('getBalance', [
-          account,
-          'latest',
-          (err, value) {
-            if (err != null && err == true) {
-              js.context
-                  .callMethod("alert", ['getBalance error:' + err.toString()]);
-            } else {
-              js.context.callMethod(
-                  "alert", ['getBalance value::' + value.toString()]);
-              final decimalWei = Decimal.tryParse(value?.toString());
-              if (decimalWei == null) {
+        if (account != null && account.trim() != '') {
+          (js.context["web3"]["eth"] as js.JsObject).callMethod('getBalance', [
+            account,
+            'latest',
+                (err, value) {
+              if (err != null && err == true) {
+                js.context.callMethod("alert", ['getBalance error:' + err.toString()]);
               } else {
-                balance = (decimalWei / Decimal.fromInt(10).pow(18)).toString();
+                js.context.callMethod("alert", ['getBalance value::' + value.toString()]);
+                final decimalWei = Decimal.tryParse(value?.toString());
+                if (decimalWei == null) {
+                } else {
+                  balance = (decimalWei / Decimal.fromInt(10).pow(18)).toString();
+                }
+                setState(() {});
               }
-              setState(() {});
             }
-          }
-        ]);
-        js.context.callMethod("alert", ['end:' + account]);
+          ]);
+        }
       },
       child: Container(
         child: Row(
@@ -254,14 +250,11 @@ class _Web3JsState extends State<Web3Js> {
     return InkWell(
       onTap: () {
         if (account != null && account.trim() != '') {
-          js.context.callMethod('alert', ['start']);
-          js.context.callMethod('helloWord', ['hello world123']);
           js.context.callMethod('sendTransaction', [
             '0x5bbF0971382Faa31ca55e74D89875a1F1531311e',
             '0x9120892E98fc20DAF33691619D9b70c099625107',
             0.1
           ]);
-          js.context.callMethod('alert', ['end']);
         }
       },
       child: Container(
@@ -283,11 +276,51 @@ class _Web3JsState extends State<Web3Js> {
   Widget _contractBalanceOfWidget(BuildContext context) {
     return InkWell(
       onTap: () {
+        js.context['setTokenBalance']=setTokenBalance;
         if (account != null && account.trim() != '') {
-          js.context.callMethod('alert', ['start01']);
-          js.context.callMethod('helloWord', ['hello world456']);
           js.context.callMethod('contractBalanceOf', [account]);
-          js.context.callMethod('alert', ['end']);
+        }
+      },
+      child: Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'ContractBalanceOfToken: ',
+              style: GoogleFonts.lato(
+                fontSize: 30,
+              ),
+            ),
+            SizedBox(width: 10),
+            Text(
+              '$tokenBalance Token',
+              style: GoogleFonts.lato(
+                fontSize: 30,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void setTokenBalance(value) {
+    print('setTokenBalance value:' + value.toString());
+    setState(() {
+      tokenBalance = value.toString();
+    });
+  }
+
+  Widget _contractTransferWidget(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        js.context['reloadContractBalanceOf']=reloadContractBalanceOf;
+        if (account != null && account.trim() != '') {
+          js.context.callMethod('contractTransfer', [
+            account,
+            '0x9120892E98fc20DAF33691619D9b70c099625107',
+            500*1e18,
+          ]);
         }
       },
       child: Container(
@@ -295,7 +328,7 @@ class _Web3JsState extends State<Web3Js> {
           padding: EdgeInsets.only(left: 15, top: 15, bottom: 15, right: 15),
           backgroundColor: Colors.blue[500],
           label: Text(
-            'ContractBalanceOf06',
+            'ContractTransferOfToken',
             style: GoogleFonts.lato(
               fontSize: 25,
               color: Colors.white,
@@ -304,6 +337,13 @@ class _Web3JsState extends State<Web3Js> {
         ),
       ),
     );
+  }
+
+  void reloadContractBalanceOf() {
+    print('reloadContractBalanceOf');
+    if (account != null && account.trim() != '') {
+      js.context.callMethod('contractBalanceOf', [account]);
+    }
   }
 
   String getNetwork(String id) {
